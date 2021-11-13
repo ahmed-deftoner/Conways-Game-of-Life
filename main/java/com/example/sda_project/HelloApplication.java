@@ -1,6 +1,7 @@
 package com.example.sda_project;
 
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -12,6 +13,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -21,6 +23,9 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public class HelloApplication extends Application {
+    private double x;
+    private double y;
+
     @Override
     public void start(Stage stage) throws IOException {
         String styles =
@@ -32,6 +37,14 @@ public class HelloApplication extends Application {
         Canvas canvas=new Canvas(500,500);
         GraphicsContext graphics=canvas.getGraphicsContext2D();
         draw(graphics);
+        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                mouseEvent -> {
+                      x=mouseEvent.getX();
+                      y=mouseEvent.getY();
+                      graphics.setFill(Color.BLACK);
+                      graphics.fillRect(x,y,20,20);
+                }
+        );
         Button start=new Button("Start");
         start.setStyle(styles);
         start.setMaxSize(100,100);
@@ -79,9 +92,9 @@ public class HelloApplication extends Application {
                     graphics.fillRect((i * 10) + 1, (j * 10) + 1, 10 - 2, 10 - 2);
                 }else {*/
                     graphics.setFill(Color.gray(0.5, 0.5));
-                    graphics.fillRect(i * 10, j * 10, 10, 10);
+                    graphics.fillRect(i * 20, j * 20, 20, 20);
                     graphics.setFill(Color.LAVENDER);
-                    graphics.fillRect((i * 10) + 1, (j * 10) + 1, 10 - 2, 10 - 2);
+                    graphics.fillRect((i * 20) + 1, (j * 20) + 1, 20 - 2, 20 - 2);
                 //}
             }
         }

@@ -23,24 +23,42 @@ import java.io.IOException;
 public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
+        String styles =
+                "-fx-background-radius: 22px;"+
+                "-fx-border-radius: 22px;" +
+                        "-fx-background-color: #e0dce5;"+
+                "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0.2, 0.5, 0.2);";
         HBox root=new HBox(10);
         Canvas canvas=new Canvas(500,500);
         GraphicsContext graphics=canvas.getGraphicsContext2D();
         draw(graphics);
         Button start=new Button("Start");
+        start.setStyle(styles);
+        start.setMaxSize(100,100);
         Button stop=new Button("Stop");
+        stop.setStyle(styles);
+        stop.setMaxSize(100,100);
         Button reset=new Button("Reset");
+        reset.setStyle(styles);
+        reset.setMaxSize(100,100);
         Label l1=new Label("Speed");
         Slider speed=new Slider();
         Label l2=new Label("Zoom");
         Slider zoom=new Slider();
         Button save=new Button("Save");
+        save.setStyle(styles);
+        save.setMaxSize(100,100);
         Button history=new Button("History");
+        history.setMaxSize(100,100);
+        history.setStyle(styles);
+       // root.getStylesheets().add("neu.css");
         VBox vBox=new VBox(20,start,stop,reset,l1,speed,l2,zoom,save,history);
+        vBox.getStylesheets().add("neu.css");
         vBox.setAlignment(Pos.CENTER_RIGHT);
         vBox.setPadding(new Insets(10,30,10,10));
         root.getChildren().addAll(canvas,vBox);
         Scene scene = new Scene(root, 700, 500);
+        //scene.getStylesheets().add("neu.css");
         stage.setTitle("Hello!");
         stage.setScene(scene);
         stage.show();

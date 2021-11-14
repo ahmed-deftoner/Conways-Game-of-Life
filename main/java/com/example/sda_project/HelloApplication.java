@@ -41,8 +41,12 @@ public class HelloApplication extends Application {
                 mouseEvent -> {
                       x=mouseEvent.getX();
                       y=mouseEvent.getY();
+                      int roundx= (int) x/20;
+                      int roundy=(int) y/20;
+                      roundx=roundx*20;
+                      roundy=roundy*20;
                       graphics.setFill(Color.BLACK);
-                      graphics.fillRect(x,y,20,20);
+                      graphics.fillRect(roundx,roundy,20,20);
                 }
         );
         Button start=new Button("Start");
@@ -55,8 +59,10 @@ public class HelloApplication extends Application {
         reset.setStyle(styles);
         reset.setMaxSize(100,100);
         Label l1=new Label("Speed");
+        l1.setPadding(new Insets(0,50,0,0));
         Slider speed=new Slider();
         Label l2=new Label("Zoom");
+        l2.setPadding(new Insets(0,50,0,0));
         Slider zoom=new Slider();
         Button save=new Button("Save");
         save.setStyle(styles);

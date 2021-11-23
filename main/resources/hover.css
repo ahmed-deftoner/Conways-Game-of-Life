@@ -2,5 +2,5 @@
   -fx-background-radius: 22px;
   -fx-border-radius: 22px;
   -fx-background-color: #e0dce5;
-  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0.2, 0.5, 0.2);
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0.5, 0.5, 0.5);
 }

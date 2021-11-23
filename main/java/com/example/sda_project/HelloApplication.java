@@ -21,15 +21,11 @@ import java.util.Arrays;
 public class HelloApplication extends Application {
     private double x;
     private double y;
-    private int[][] gridarr=new int[500][500];
+    private int[][] gridarr=new int[100][100];
+    private int gridsize=20;
 
     @Override
     public void start(Stage stage) throws IOException {
-       /* String styles =
-                "-fx-background-radius: 22px;"+
-                "-fx-border-radius: 22px;" +
-                        "-fx-background-color: #e0dce5;"+
-                "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0.2, 0.5, 0.2);";*/
 
         for(int i=0;i<100;++i)
             for(int j=0;j<100;++j)
@@ -42,10 +38,8 @@ public class HelloApplication extends Application {
                 mouseEvent -> {
                       x=mouseEvent.getX();
                       y=mouseEvent.getY();
-                      int roundx= (int) x/20;
-                      int roundy=(int) y/20;
-                      roundx=roundx*20;
-                      roundy=roundy*20;
+                      int roundx= (int) x/gridsize;
+                      int roundy=(int) y/gridsize;
                       if(gridarr[roundx][roundy]==0) {
                           graphics.setFill(Color.BLACK);
                           gridarr[roundx][roundy]=1;
@@ -54,7 +48,9 @@ public class HelloApplication extends Application {
                           graphics.setFill(Color.LAVENDER);
                           gridarr[roundx][roundy]=0;
                       }
-                      graphics.fillRect(roundx+1,roundy+1,18,18);
+                     roundx=roundx*gridsize;
+                     roundy=roundy*gridsize;
+                     graphics.fillRect(roundx+1,roundy+1,gridsize-2,gridsize-2);
                 }
         );
         Button start=new Button("Start");
@@ -71,6 +67,22 @@ public class HelloApplication extends Application {
         Slider speed=new Slider();
         Label l2=new Label("Zoom");
         l2.setPadding(new Insets(0,50,0,0));
+        Button zoomIn=new Button("+");
+        zoomIn.setSkin(new MyButtonSkin(zoomIn));
+        zoomIn.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                mouseEvent -> {
+                    gridsize+=5;
+                    draw(graphics);
+                }
+        );
+        Button zoomOut=new Button("-");
+        zoomOut.setSkin(new MyButtonSkin(zoomOut));
+        zoomOut.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                mouseEvent -> {
+                    gridsize-=5;
+                    draw(graphics);
+                }
+        );
         Slider zoom=new Slider();
         Button save=new Button("Save");
         save.setSkin(new MyButtonSkin(save));
@@ -80,7 +92,7 @@ public class HelloApplication extends Application {
         history.setMaxSize(100,100);
         //history.setStyle(styles);
        // root.getStylesheets().add("neu.css");
-        VBox vBox=new VBox(20,start,stop,reset,l1,speed,l2,zoom,save,history);
+        VBox vBox=new VBox(20,start,stop,reset,l1,speed,l2,zoomIn,zoomOut,save,history);
         vBox.getStylesheets().add("neu.css");
         vBox.setAlignment(Pos.CENTER_RIGHT);
         vBox.setPadding(new Insets(10,30,10,10));
@@ -107,9 +119,9 @@ public class HelloApplication extends Application {
                     graphics.fillRect((i * 10) + 1, (j * 10) + 1, 10 - 2, 10 - 2);
                 }else {*/
                     graphics.setFill(Color.gray(0.5, 0.5));
-                    graphics.fillRect(i * 20, j * 20, 20, 20);
+                    graphics.fillRect(i * gridsize, j * gridsize, gridsize, gridsize);
                     graphics.setFill(Color.LAVENDER);
-                    graphics.fillRect((i * 20) + 1, (j * 20) + 1, 20 - 2, 20 - 2);
+                    graphics.fillRect((i * gridsize) + 1, (j * gridsize) + 1, gridsize - 2, gridsize - 2);
                 //}
             }
         }

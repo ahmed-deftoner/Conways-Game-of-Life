@@ -9,14 +9,28 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import java.io.IOException;
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 public class HelloApplication extends Application {
     private double x;
@@ -92,13 +106,51 @@ public class HelloApplication extends Application {
                     draw(graphics);
                 }
         );
-        Slider zoom=new Slider();
         Button save=new Button("Save");
         save.setSkin(new MyButtonSkin(save));
         save.setMaxSize(100,100);
+        save.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                mouseEvent -> {
+                    TextInputDialog dialog=new TextInputDialog("hehe");
+                    dialog.setHeaderText(null);
+                    dialog.setTitle("Save Design");
+                    dialog.setContentText("Please enter design name");
+
+                    Optional<String> result = dialog.showAndWait();
+                    if (result.isPresent() && result.get()=="") {
+                        //Creating a JSONObject object
+                        JSONObject jsonObject = new JSONObject();
+                        //Inserting key-value pairs into the json object
+                        String name=result.get();
+                        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+                        LocalDateTime now = LocalDateTime.now();
+                        jsonObject.put("Name", name);
+                        jsonObject.put("Time", dtf.format(now));
+                        try {
+                            FileWriter file = new FileWriter("D:/C#/SDA_project/data.json",true);
+                            file.write(jsonObject.toJSONString());
+                            file.close();
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+
+                        System.out.println("Your name: " + result.get());
+                    }
+                }
+        );
         Button history=new Button("History");
         history.setSkin(new MyButtonSkin(history));
         history.setMaxSize(100,100);
+        history.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                mouseEvent -> {
+                    Stage stage1=new Stage();
+                    stage1.setTitle("History");
+                  //  Scene scene1=new Scene(300,300);
+                    stage1.initModality(Modality.APPLICATION_MODAL);
+                    stage1.showAndWait();
+                }
+        );
         //history.setStyle(styles);
        // root.getStylesheets().add("neu.css");
         VBox vBox=new VBox(20,start,stop,reset,l1,speed,l2,zoomIn,zoomOut,save,history);
@@ -109,6 +161,7 @@ public class HelloApplication extends Application {
         Scene scene = new Scene(root, 700, 500);
        // scene.getStylesheets().add("neu.css");
         stage.setTitle("Hello!");
+        stage.setResizable(false);
         stage.setScene(scene);
         stage.show();
     }

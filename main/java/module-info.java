@@ -9,6 +9,7 @@ module com.example.sda_project {
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.bootstrapfx.core;
     requires eu.hansolo.tilesfx;
+    requires json.simple;
 
     opens com.example.sda_project to javafx.fxml;
     exports com.example.sda_project;

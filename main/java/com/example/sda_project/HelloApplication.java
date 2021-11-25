@@ -41,7 +41,7 @@ public class HelloApplication extends Application {
                       int roundx= (int) x/gridsize;
                       int roundy=(int) y/gridsize;
                       if(gridarr[roundx][roundy]==0) {
-                          graphics.setFill(Color.BLACK);
+                          graphics.setFill(Color.PURPLE);
                           gridarr[roundx][roundy]=1;
                       }
                       else{
@@ -50,6 +50,7 @@ public class HelloApplication extends Application {
                       }
                      roundx=roundx*gridsize;
                      roundy=roundy*gridsize;
+                   //  draw(graphics);
                      graphics.fillRect(roundx+1,roundy+1,gridsize-2,gridsize-2);
                 }
         );
@@ -61,6 +62,14 @@ public class HelloApplication extends Application {
         stop.setMaxSize(100,100);
         Button reset=new Button("Reset");
         reset.setSkin(new MyButtonSkin(reset));
+        reset.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                mouseEvent -> {
+                    for(int i=0;i<100;++i)
+                        for(int j=0;j<100;++j)
+                            gridarr[i][j]=0;
+                    draw(graphics);
+                }
+        );
         reset.setMaxSize(100,100);
         Label l1=new Label("Speed");
         l1.setPadding(new Insets(0,50,0,0));
@@ -111,18 +120,17 @@ public class HelloApplication extends Application {
 
         for (int i = 0; i < 100; i++) {
             for (int j = 0; j < 100; j++) {
-               /* if (grid[i][j] == 1) {
-                    // first rect will end up becoming the border
+                if (gridarr[i][j] == 1) {
                     graphics.setFill(Color.gray(0.5, 0.5));
-                    graphics.fillRect(i * 10, j * 10, 10, 10);
+                    graphics.fillRect(i * gridsize, j * gridsize, gridsize, gridsize);
                     graphics.setFill(Color.PURPLE);
-                    graphics.fillRect((i * 10) + 1, (j * 10) + 1, 10 - 2, 10 - 2);
-                }else {*/
+                    graphics.fillRect((i * gridsize) + 1, (j * gridsize) + 1, gridsize - 2, gridsize - 2);
+                }else {
                     graphics.setFill(Color.gray(0.5, 0.5));
                     graphics.fillRect(i * gridsize, j * gridsize, gridsize, gridsize);
                     graphics.setFill(Color.LAVENDER);
                     graphics.fillRect((i * gridsize) + 1, (j * gridsize) + 1, gridsize - 2, gridsize - 2);
-                //}
+                }
             }
         }
     }

@@ -41,6 +41,7 @@ public class HelloApplication extends Application {
     private int[][] gridarr=new int[100][100];
     private int gridsize=20;
     private double speed=1;
+    private ObservableList<String> data = FXCollections.observableArrayList();
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -48,7 +49,7 @@ public class HelloApplication extends Application {
         for(int i=0;i<100;++i)
             for(int j=0;j<100;++j)
                 gridarr[i][j]=0;
-        final HBox[] root = {new HBox(10)};
+        HBox root = new HBox(10);
         Canvas canvas=new Canvas(500,500);
         GraphicsContext graphics=canvas.getGraphicsContext2D();
         draw(graphics);
@@ -199,7 +200,7 @@ public class HelloApplication extends Application {
                 mouseEvent -> {
                     Stage stage1=new Stage();
                     stage1.setTitle("History");
-                    JSONArray gameList;
+                    JSONArray gameList=null;
 
                     JSONParser jsonParser = new JSONParser();
 
@@ -255,12 +256,9 @@ public class HelloApplication extends Application {
                         e.printStackTrace();
                     }*/
                   //  Scene scene1=new Scene(300,300);
-                    ObservableList<String> data = FXCollections.observableArrayList();
 
                     ListView<String> listView = new ListView<String>(data);
                     listView.setPrefSize(200, 250);
-
-                    //data.addAll(gameList.get("Name"));
 
                     listView.setItems(data);
                     listView.getSelectionModel().selectedItemProperty().addListener(
@@ -282,8 +280,8 @@ public class HelloApplication extends Application {
         vBox.getStylesheets().add("neu.css");
         vBox.setAlignment(Pos.CENTER_RIGHT);
         vBox.setPadding(new Insets(10,30,10,10));
-        root[0].getChildren().addAll(canvas,vBox);
-        Scene scene = new Scene(root[0], 700, 500);
+        root.getChildren().addAll(canvas,vBox);
+        Scene scene = new Scene(root, 700, 500);
        // scene.getStylesheets().add("neu.css");
         stage.setTitle("Hello!");
         stage.setResizable(false);
@@ -291,13 +289,14 @@ public class HelloApplication extends Application {
         stage.show();
     }
 
-    private static void parseGameObject(JSONObject game)
+    private void parseGameObject(JSONObject game)
     {
         //Get employee object within list
         JSONObject obj = (JSONObject) game.get("game");
 
         System.out.println("Contents of the JSON are: ");
         System.out.println("Name: "+obj.get("Name"));
+        data.addAll((String) obj.get("Name"));
         System.out.println("Time: "+obj.get("Time"));
         System.out.println("Gridsize: "+obj.get("GridSize"));
         //Retrieving the array

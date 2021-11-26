@@ -2,25 +2,25 @@ package com.example.sda_project;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +40,7 @@ public class HelloApplication extends Application {
     private double y;
     private int[][] gridarr=new int[100][100];
     private int gridsize=20;
+    private double speed=1;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -46,7 +48,7 @@ public class HelloApplication extends Application {
         for(int i=0;i<100;++i)
             for(int j=0;j<100;++j)
                 gridarr[i][j]=0;
-        HBox root=new HBox(10);
+        final HBox[] root = {new HBox(10)};
         Canvas canvas=new Canvas(500,500);
         GraphicsContext graphics=canvas.getGraphicsContext2D();
         draw(graphics);
@@ -76,7 +78,7 @@ public class HelloApplication extends Application {
             @Override
             public void handle(long now) {
                 // only update once every second
-                if ((now - lastUpdate) >= TimeUnit.MILLISECONDS.toNanos(500)) {
+                if ((now - lastUpdate) >= TimeUnit.MILLISECONDS.toNanos((long) (500*speed))) {
                     tick(graphics);
                     lastUpdate = now;
                 }
@@ -88,7 +90,7 @@ public class HelloApplication extends Application {
         start.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
                     runAnimation.start();
-                    tick(graphics);
+                  //  tick(graphics);
                 }
         );
         Button stop=new Button("Stop");
@@ -112,7 +114,13 @@ public class HelloApplication extends Application {
         reset.setMaxSize(100,100);
         Label l1=new Label("Speed");
         l1.setPadding(new Insets(0,50,0,0));
-        Slider speed=new Slider();
+        Slider speed = new Slider(0, 10, 5);
+        speed.valueProperty().addListener(
+                (observable, oldvalue, newvalue) ->
+                {
+                    double i = newvalue.doubleValue();
+                    this.speed=i;
+                });
         Label l2=new Label("Zoom");
         l2.setPadding(new Insets(0,50,0,0));
         Button zoomIn=new Button("+");
@@ -142,24 +150,44 @@ public class HelloApplication extends Application {
                     dialog.setContentText("Please enter design name");
 
                     Optional<String> result = dialog.showAndWait();
-                    if (result.isPresent() && result.get()=="") {
-                        //Creating a JSONObject object
-                        JSONObject jsonObject = new JSONObject();
-                        //Inserting key-value pairs into the json object
+                    if (result.isPresent()) {
                         String name=result.get();
                         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
                         LocalDateTime now = LocalDateTime.now();
-                        jsonObject.put("Name", name);
-                        jsonObject.put("Time", dtf.format(now));
-                        try {
-                            FileWriter file = new FileWriter("D:/C#/SDA_project/data.json",true);
-                            file.write(jsonObject.toJSONString());
-                            file.close();
+                        //First Employee
+                        JSONObject Details = new JSONObject();
+                        Details.put("Name", name);
+                        Details.put("Time", dtf.format(now));
+                        Details.put("GridSize", gridsize);
+                        JSONArray rows=new JSONArray();
+                        JSONArray column=new JSONArray();
+                        for(int i=0;i<100;++i) {
+                            for (int j = 0; j < 100; ++j) {
+                                if(gridarr[i][j]==1) {
+                                    rows.add(i);
+                                    column.add(j);
+                                }
+                            }
+                        }
+                        Details.put("Rows",rows);
+                        Details.put("Columns",column);
+
+                        JSONObject obj = new JSONObject();
+                        obj.put("game", Details);
+
+                        //Add employees to list
+                        JSONArray gameList = new JSONArray();
+                        gameList.add(obj);
+
+                        //Write JSON file
+                        try (FileWriter file = new FileWriter("D:/C#/SDA_project/data.json",true)) {
+                            //We can write any JSONArray or JSONObject instance to the file
+                            file.write(gameList.toJSONString());
+                            file.flush();
+
                         } catch (IOException e) {
-                            // TODO Auto-generated catch block
                             e.printStackTrace();
                         }
-
                         System.out.println("Your name: " + result.get());
                     }
                 }
@@ -171,24 +199,124 @@ public class HelloApplication extends Application {
                 mouseEvent -> {
                     Stage stage1=new Stage();
                     stage1.setTitle("History");
+                    JSONArray gameList;
+
+                    JSONParser jsonParser = new JSONParser();
+
+                    try (FileReader reader = new FileReader("D:/C#/SDA_project/data.json"))
+                    {
+                        //Read JSON file
+                        Object obj = jsonParser.parse(reader);
+
+                        gameList = (JSONArray) obj;
+                        System.out.println(gameList);
+
+                        //Iterate over employee array
+                        gameList.forEach( emp -> parseGameObject( (JSONObject) emp ) );
+
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                  /*  JSONParser jsonParser = new JSONParser();
+                    try {
+                        //Parsing the contents of the JSON file
+                        JSONObject jsonObject = (JSONObject) jsonParser.parse(new FileReader("D:/C#/SDA_project/data.json"));
+                        //Forming URL
+                        System.out.println("Contents of the JSON are: ");
+                        System.out.println("Name: "+jsonObject.get("Name"));
+                        System.out.println("Time: "+jsonObject.get("Date"));
+                        System.out.println("Gridsize: "+jsonObject.get("GridSize"));
+                        //Retrieving the array
+                        JSONArray rows = (JSONArray) jsonObject.get("Rows");
+                        System.out.println("");
+                        System.out.println("rows: ");
+                        //Iterating the contents of the array
+                        Iterator<Integer> iterator = rows.iterator();
+                        while(iterator.hasNext()) {
+                            System.out.println(iterator.next());
+                        }
+                        JSONArray cols = (JSONArray) jsonObject.get("Columns");
+                        System.out.println("");
+                        System.out.println("cols: ");
+                        //Iterating the contents of the array
+                        iterator=cols.iterator();
+                        while(iterator.hasNext()) {
+                            System.out.println(iterator.next());
+                        }
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }*/
                   //  Scene scene1=new Scene(300,300);
+                    ObservableList<String> data = FXCollections.observableArrayList();
+
+                    ListView<String> listView = new ListView<String>(data);
+                    listView.setPrefSize(200, 250);
+
+                    //data.addAll(gameList.get("Name"));
+
+                    listView.setItems(data);
+                    listView.getSelectionModel().selectedItemProperty().addListener(
+                            (ObservableValue<? extends String> ov, String old_val,
+                             String new_val) -> {
+                                System.out.println(new_val);
+
+                            });
+                    StackPane root1 = new StackPane();
+                    root1.getChildren().add(listView);
+                    stage1.setScene(new Scene(root1, 200, 250));
                     stage1.initModality(Modality.APPLICATION_MODAL);
                     stage1.showAndWait();
                 }
         );
         //history.setStyle(styles);
        // root.getStylesheets().add("neu.css");
-        VBox vBox=new VBox(20,start,stop,reset,l1,speed,l2,zoomIn,zoomOut,save,history);
+        VBox vBox=new VBox(20,start,stop,reset,l1, speed,l2,zoomIn,zoomOut,save,history);
         vBox.getStylesheets().add("neu.css");
         vBox.setAlignment(Pos.CENTER_RIGHT);
         vBox.setPadding(new Insets(10,30,10,10));
-        root.getChildren().addAll(canvas,vBox);
-        Scene scene = new Scene(root, 700, 500);
+        root[0].getChildren().addAll(canvas,vBox);
+        Scene scene = new Scene(root[0], 700, 500);
        // scene.getStylesheets().add("neu.css");
         stage.setTitle("Hello!");
         stage.setResizable(false);
         stage.setScene(scene);
         stage.show();
+    }
+
+    private static void parseGameObject(JSONObject game)
+    {
+        //Get employee object within list
+        JSONObject obj = (JSONObject) game.get("game");
+
+        System.out.println("Contents of the JSON are: ");
+        System.out.println("Name: "+obj.get("Name"));
+        System.out.println("Time: "+obj.get("Time"));
+        System.out.println("Gridsize: "+obj.get("GridSize"));
+        //Retrieving the array
+        JSONArray rows = (JSONArray) obj.get("Rows");
+        System.out.println("");
+        System.out.println("rows: ");
+        //Iterating the contents of the array
+        Iterator<Integer> iterator = rows.iterator();
+        while(iterator.hasNext()) {
+            System.out.println(iterator.next());
+        }
+        JSONArray cols = (JSONArray) obj.get("Columns");
+        System.out.println("");
+        System.out.println("cols: ");
+        //Iterating the contents of the array
+        iterator=cols.iterator();
+        while(iterator.hasNext()) {
+            System.out.println(iterator.next());
+        }
     }
 
     private void draw(GraphicsContext graphics) {

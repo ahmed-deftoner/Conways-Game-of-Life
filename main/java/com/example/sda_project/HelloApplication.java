@@ -1,5 +1,6 @@
 package com.example.sda_project;
 
+import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -31,6 +32,7 @@ import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class HelloApplication extends Application {
     private double x;
@@ -68,12 +70,35 @@ public class HelloApplication extends Application {
                      graphics.fillRect(roundx+1,roundy+1,gridsize-2,gridsize-2);
                 }
         );
+        AnimationTimer runAnimation = new AnimationTimer() {
+            private long lastUpdate = 0;
+
+            @Override
+            public void handle(long now) {
+                // only update once every second
+                if ((now - lastUpdate) >= TimeUnit.MILLISECONDS.toNanos(500)) {
+                    tick(graphics);
+                    lastUpdate = now;
+                }
+            }
+        };
         Button start=new Button("Start");
         start.setSkin(new MyButtonSkin(start));
         start.setMaxSize(100,100);
+        start.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                mouseEvent -> {
+                    runAnimation.start();
+                    tick(graphics);
+                }
+        );
         Button stop=new Button("Stop");
         stop.setSkin(new MyButtonSkin(stop));
         stop.setMaxSize(100,100);
+        stop.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                mouseEvent -> {
+                    runAnimation.stop();
+                }
+        );
         Button reset=new Button("Reset");
         reset.setSkin(new MyButtonSkin(reset));
         reset.addEventHandler(MouseEvent.MOUSE_CLICKED,
@@ -186,6 +211,44 @@ public class HelloApplication extends Application {
                 }
             }
         }
+    }
+
+    public void tick(GraphicsContext graphics) {
+        int[][] next = new int[100][100];
+
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 100; j++) {
+                int neighbors = countAliveNeighbors(i, j);
+
+                if (neighbors == 3) {
+                    next[i][j] = 1;
+                }else if (neighbors < 2 || neighbors > 3) {
+                    next[i][j] = 0;
+                }else {
+                    next[i][j] = gridarr[i][j];
+                }
+            }
+        }
+        gridarr = next;
+        draw(graphics);
+    }
+
+    private int countAliveNeighbors(int i, int j) {
+        int sum = 0;
+        int iStart = i == 0 ? 0 : -1;
+        int iEndInclusive = i == gridarr.length - 1 ? 0 : 1;
+        int jStart = j == 0 ? 0 : -1;
+        int jEndInclusive = j == gridarr[0].length - 1 ? 0 : 1;
+
+        for (int k = iStart; k <= iEndInclusive; k++) {
+            for (int l = jStart; l <= jEndInclusive; l++) {
+                sum += gridarr[i + k][l + j];
+            }
+        }
+
+        sum -= gridarr[i][j];
+
+        return sum;
     }
 
     public static void main(String[] args) {

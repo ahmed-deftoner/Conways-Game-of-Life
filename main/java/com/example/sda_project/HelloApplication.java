@@ -2,7 +2,6 @@ package com.example.sda_project;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -24,15 +23,9 @@ import java.io.*;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
-import java.time.DateTimeException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Iterator;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class HelloApplication extends Application {
@@ -45,6 +38,18 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+
+        Scanner scanner = null;
+        try {
+            scanner = new Scanner( new File("names.txt") );
+            while (scanner.hasNext()) {
+                String text = scanner.useDelimiter("\n").next();
+                data.add(text);
+            }
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
         for(int i=0;i<100;++i)
             for(int j=0;j<100;++j)
@@ -69,7 +74,6 @@ public class HelloApplication extends Application {
                       }
                      roundx=roundx*gridsize;
                      roundy=roundy*gridsize;
-                   //  draw(graphics);
                      graphics.fillRect(roundx+1,roundy+1,gridsize-2,gridsize-2);
                 }
         );
@@ -91,7 +95,6 @@ public class HelloApplication extends Application {
         start.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
                     runAnimation.start();
-                  //  tick(graphics);
                 }
         );
         Button stop=new Button("Stop");
@@ -153,39 +156,31 @@ public class HelloApplication extends Application {
                     Optional<String> result = dialog.showAndWait();
                     if (result.isPresent()) {
                         String name=result.get();
-                        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-                        LocalDateTime now = LocalDateTime.now();
-                        //First Employee
-                        JSONObject Details = new JSONObject();
-                        Details.put("Name", name);
-                        Details.put("Time", dtf.format(now));
-                        Details.put("GridSize", gridsize);
-                        JSONArray rows=new JSONArray();
-                        JSONArray column=new JSONArray();
-                        for(int i=0;i<100;++i) {
-                            for (int j = 0; j < 100; ++j) {
-                                if(gridarr[i][j]==1) {
-                                    rows.add(i);
-                                    column.add(j);
+                        FileWriter fw = null;
+                        try {
+                            fw=new FileWriter(name+".txt");
+                            List<Integer> rows = new ArrayList<>();
+                            List<Integer> column = new ArrayList<>();
+                            int counter=0;
+                            for(int i=0;i<100;++i) {
+                                for (int j = 0; j < 100; ++j) {
+                                    if(gridarr[i][j]==1) {
+                                        counter++;
+                                        rows.add(i);
+                                        column.add(j);
+                                    }
                                 }
                             }
-                        }
-                        Details.put("Rows",rows);
-                        Details.put("Columns",column);
-
-                        JSONObject obj = new JSONObject();
-                        obj.put("game", Details);
-
-                        //Add employees to list
-                        JSONArray gameList = new JSONArray();
-                        gameList.add(obj);
-
-                        //Write JSON file
-                        try (FileWriter file = new FileWriter("D:/C#/SDA_project/data.json",true)) {
-                            //We can write any JSONArray or JSONObject instance to the file
-                            file.write(gameList.toJSONString());
-                            file.flush();
-
+                            fw.write(gridsize+"\n");
+                            fw.write(counter+"\n");
+                            for(int i=0;i<counter;++i)
+                                fw.write(rows.get(i)+"\n");
+                            for(int i=0;i<counter;++i)
+                                fw.write(column.get(i)+"\n");
+                            fw.close();
+                            fw=new FileWriter("names.txt",true);
+                            fw.write(name+"\n");
+                            fw.close();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -200,63 +195,6 @@ public class HelloApplication extends Application {
                 mouseEvent -> {
                     Stage stage1=new Stage();
                     stage1.setTitle("History");
-                    JSONArray gameList=null;
-
-                    JSONParser jsonParser = new JSONParser();
-
-                    try (FileReader reader = new FileReader("D:/C#/SDA_project/data.json"))
-                    {
-                        //Read JSON file
-                        Object obj = jsonParser.parse(reader);
-
-                        gameList = (JSONArray) obj;
-                        System.out.println(gameList);
-
-                        //Iterate over employee array
-                        gameList.forEach( emp -> parseGameObject( (JSONObject) emp ) );
-
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                  /*  JSONParser jsonParser = new JSONParser();
-                    try {
-                        //Parsing the contents of the JSON file
-                        JSONObject jsonObject = (JSONObject) jsonParser.parse(new FileReader("D:/C#/SDA_project/data.json"));
-                        //Forming URL
-                        System.out.println("Contents of the JSON are: ");
-                        System.out.println("Name: "+jsonObject.get("Name"));
-                        System.out.println("Time: "+jsonObject.get("Date"));
-                        System.out.println("Gridsize: "+jsonObject.get("GridSize"));
-                        //Retrieving the array
-                        JSONArray rows = (JSONArray) jsonObject.get("Rows");
-                        System.out.println("");
-                        System.out.println("rows: ");
-                        //Iterating the contents of the array
-                        Iterator<Integer> iterator = rows.iterator();
-                        while(iterator.hasNext()) {
-                            System.out.println(iterator.next());
-                        }
-                        JSONArray cols = (JSONArray) jsonObject.get("Columns");
-                        System.out.println("");
-                        System.out.println("cols: ");
-                        //Iterating the contents of the array
-                        iterator=cols.iterator();
-                        while(iterator.hasNext()) {
-                            System.out.println(iterator.next());
-                        }
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }*/
-                  //  Scene scene1=new Scene(300,300);
-
                     ListView<String> listView = new ListView<String>(data);
                     listView.setPrefSize(200, 250);
 
@@ -264,8 +202,26 @@ public class HelloApplication extends Application {
                     listView.getSelectionModel().selectedItemProperty().addListener(
                             (ObservableValue<? extends String> ov, String old_val,
                              String new_val) -> {
+                                try {
+                                    Scanner scanner2 = new Scanner(new File(new_val+".txt"));
+                                    int [] tall = new int [100];
+                                    int i = 0;
+                                    while(scanner2.hasNextInt())
+                                    {
+                                        tall[i++] = scanner2.nextInt();
+                                    }
+                                    gridsize=tall[0];
+                                    for(int j=2;j<=tall[1];++j){
+                                        gridarr[10][10]=1;
+                                        gridarr[tall[j]][tall[j+tall[1]]]=1;
+                                        System.out.println(tall[j]);
+                                    }
+                                } catch (FileNotFoundException e) {
+                                    e.printStackTrace();
+                                }
+                                draw(graphics);
+                                stage1.close();
                                 System.out.println(new_val);
-
                             });
                     StackPane root1 = new StackPane();
                     root1.getChildren().add(listView);
@@ -304,8 +260,10 @@ public class HelloApplication extends Application {
         System.out.println("");
         System.out.println("rows: ");
         //Iterating the contents of the array
-        Iterator<Integer> iterator = rows.iterator();
+        Iterator iterator = rows.iterator();
+        List<Integer> arr_row = new ArrayList<>();
         while(iterator.hasNext()) {
+            arr_row.add((int)iterator.next());
             System.out.println(iterator.next());
         }
         JSONArray cols = (JSONArray) obj.get("Columns");
@@ -313,9 +271,13 @@ public class HelloApplication extends Application {
         System.out.println("cols: ");
         //Iterating the contents of the array
         iterator=cols.iterator();
+        List<Integer> arr_col=new ArrayList<>();
         while(iterator.hasNext()) {
+            arr_col.add((int)iterator.next());
             System.out.println(iterator.next());
         }
+        for(int i=0;i<arr_col.size();++i)
+            gridarr[arr_row.get(i)][arr_col.get(i)]=1;
     }
 
     private void draw(GraphicsContext graphics) {

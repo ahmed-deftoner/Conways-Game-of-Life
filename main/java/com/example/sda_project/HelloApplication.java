@@ -156,6 +156,15 @@ public class HelloApplication extends Application {
                     Optional<String> result = dialog.showAndWait();
                     if (result.isPresent()) {
                         String name=result.get();
+                        boolean found=false;
+                        for(int i=0;i<data.size();++i){
+                            if(data.get(i)==name){
+                                found=true;
+                                break;
+                            }
+                        }
+                        if(found==false)
+                            data.add(name);
                         FileWriter fw = null;
                         try {
                             fw=new FileWriter(name+".txt");

@@ -254,41 +254,6 @@ public class HelloApplication extends Application {
         stage.show();
     }
 
-    private void parseGameObject(JSONObject game)
-    {
-        //Get employee object within list
-        JSONObject obj = (JSONObject) game.get("game");
-
-        System.out.println("Contents of the JSON are: ");
-        System.out.println("Name: "+obj.get("Name"));
-        data.addAll((String) obj.get("Name"));
-        System.out.println("Time: "+obj.get("Time"));
-        System.out.println("Gridsize: "+obj.get("GridSize"));
-        //Retrieving the array
-        JSONArray rows = (JSONArray) obj.get("Rows");
-        System.out.println("");
-        System.out.println("rows: ");
-        //Iterating the contents of the array
-        Iterator iterator = rows.iterator();
-        List<Integer> arr_row = new ArrayList<>();
-        while(iterator.hasNext()) {
-            arr_row.add((int)iterator.next());
-            System.out.println(iterator.next());
-        }
-        JSONArray cols = (JSONArray) obj.get("Columns");
-        System.out.println("");
-        System.out.println("cols: ");
-        //Iterating the contents of the array
-        iterator=cols.iterator();
-        List<Integer> arr_col=new ArrayList<>();
-        while(iterator.hasNext()) {
-            arr_col.add((int)iterator.next());
-            System.out.println(iterator.next());
-        }
-        for(int i=0;i<arr_col.size();++i)
-            gridarr[arr_row.get(i)][arr_col.get(i)]=1;
-    }
-
     private void draw(GraphicsContext graphics) {
         // clear graphics
         graphics.setFill(Color.LAVENDER);

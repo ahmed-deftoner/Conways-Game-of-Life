@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class HelloApplication extends Application {
+public class GameOfLife extends Application {
     private Grid grid=new Grid();
     private GameLogic game=new GameLogic();
     private double speed=1;

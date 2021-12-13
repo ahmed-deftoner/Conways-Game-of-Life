@@ -1,5 +1,7 @@
 package com.example.sda_project;
 
+import com.example.sda_project.BL.GameLogic;
+import com.example.sda_project.BL.Grid;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
@@ -20,19 +22,13 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.*;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class HelloApplication extends Application {
-    private double x;
-    private double y;
-    private int[][] gridarr=new int[100][100];
-    private int gridsize=20;
+    private Grid grid=new Grid();
+    private GameLogic game=new GameLogic();
     private double speed=1;
     private ObservableList<String> data = FXCollections.observableArrayList();
 
@@ -51,30 +47,25 @@ public class HelloApplication extends Application {
             e.printStackTrace();
         }
 
-        for(int i=0;i<100;++i)
-            for(int j=0;j<100;++j)
-                gridarr[i][j]=0;
         HBox root = new HBox(10);
         Canvas canvas=new Canvas(500,500);
         GraphicsContext graphics=canvas.getGraphicsContext2D();
         draw(graphics);
         canvas.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
-                      x=mouseEvent.getX();
-                      y=mouseEvent.getY();
-                      int roundx= (int) x/gridsize;
-                      int roundy=(int) y/gridsize;
-                      if(gridarr[roundx][roundy]==0) {
+                      int roundx= (int) mouseEvent.getX()/grid.getGridSize();
+                      int roundy=(int) mouseEvent.getY()/ grid.getGridSize();
+                      if(grid.getGridArray(roundx,roundy)==0) {
                           graphics.setFill(Color.PURPLE);
-                          gridarr[roundx][roundy]=1;
+                          grid.setGridArray(roundx,roundy,1);
                       }
                       else{
                           graphics.setFill(Color.LAVENDER);
-                          gridarr[roundx][roundy]=0;
+                          grid.setGridArray(roundx,roundy,0);
                       }
-                     roundx=roundx*gridsize;
-                     roundy=roundy*gridsize;
-                     graphics.fillRect(roundx+1,roundy+1,gridsize-2,gridsize-2);
+                     roundx=roundx*grid.getGridSize();
+                     roundy=roundy*grid.getGridSize();
+                     graphics.fillRect(roundx+1,roundy+1,grid.getGridSize()-2,grid.getGridSize()-2);
                 }
         );
         AnimationTimer runAnimation = new AnimationTimer() {
@@ -109,9 +100,7 @@ public class HelloApplication extends Application {
         reset.setSkin(new MyButtonSkin(reset));
         reset.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
-                    for(int i=0;i<100;++i)
-                        for(int j=0;j<100;++j)
-                            gridarr[i][j]=0;
+                    grid.Reset();
                     draw(graphics);
                 }
         );
@@ -131,7 +120,7 @@ public class HelloApplication extends Application {
         zoomIn.setSkin(new MyButtonSkin(zoomIn));
         zoomIn.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
-                    gridsize+=5;
+                    grid.setGridSize(grid.getGridSize()+5);
                     draw(graphics);
                 }
         );
@@ -139,7 +128,7 @@ public class HelloApplication extends Application {
         zoomOut.setSkin(new MyButtonSkin(zoomOut));
         zoomOut.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
-                    gridsize-=5;
+                    grid.setGridSize(grid.getGridSize()-5);
                     draw(graphics);
                 }
         );
@@ -173,14 +162,14 @@ public class HelloApplication extends Application {
                             int counter=0;
                             for(int i=0;i<100;++i) {
                                 for (int j = 0; j < 100; ++j) {
-                                    if(gridarr[i][j]==1) {
+                                    if(grid.getGridArray(i,j)==1) {
                                         counter++;
                                         rows.add(i);
                                         column.add(j);
                                     }
                                 }
                             }
-                            fw.write(gridsize+"\n");
+                            fw.write(grid.getGridSize()+"\n");
                             fw.write(counter+"\n");
                             for(int i=0;i<counter;++i)
                                 fw.write(rows.get(i)+"\n");
@@ -219,10 +208,9 @@ public class HelloApplication extends Application {
                                     {
                                         tall[i++] = scanner2.nextInt();
                                     }
-                                    gridsize=tall[0];
+                                    grid.setGridSize(tall[0]);
                                     for(int j=2;j<=tall[1];++j){
-                                        gridarr[10][10]=1;
-                                        gridarr[tall[j]][tall[j+tall[1]]]=1;
+                                        grid.setGridArray(tall[j],tall[j+tall[1]],1);
                                         System.out.println(tall[j]);
                                     }
                                 } catch (FileNotFoundException e) {
@@ -239,15 +227,12 @@ public class HelloApplication extends Application {
                     stage1.showAndWait();
                 }
         );
-        //history.setStyle(styles);
-       // root.getStylesheets().add("neu.css");
         VBox vBox=new VBox(20,start,stop,reset,l1, speed,l2,zoomIn,zoomOut,save,history);
         vBox.getStylesheets().add("neu.css");
         vBox.setAlignment(Pos.CENTER_RIGHT);
         vBox.setPadding(new Insets(10,30,10,10));
         root.getChildren().addAll(canvas,vBox);
         Scene scene = new Scene(root, 700, 500);
-       // scene.getStylesheets().add("neu.css");
         stage.setTitle("Hello!");
         stage.setResizable(false);
         stage.setScene(scene);
@@ -261,57 +246,24 @@ public class HelloApplication extends Application {
 
         for (int i = 0; i < 100; i++) {
             for (int j = 0; j < 100; j++) {
-                if (gridarr[i][j] == 1) {
+                if (grid.getGridArray(i,j) == 1) {
                     graphics.setFill(Color.gray(0.5, 0.5));
-                    graphics.fillRect(i * gridsize, j * gridsize, gridsize, gridsize);
+                    graphics.fillRect(i * grid.getGridSize(), j * grid.getGridSize(), grid.getGridSize(), grid.getGridSize());
                     graphics.setFill(Color.PURPLE);
-                    graphics.fillRect((i * gridsize) + 1, (j * gridsize) + 1, gridsize - 2, gridsize - 2);
+                    graphics.fillRect((i * grid.getGridSize()) + 1, (j * grid.getGridSize()) + 1, grid.getGridSize() - 2, grid.getGridSize() - 2);
                 }else {
                     graphics.setFill(Color.gray(0.5, 0.5));
-                    graphics.fillRect(i * gridsize, j * gridsize, gridsize, gridsize);
+                    graphics.fillRect(i * grid.getGridSize(), j * grid.getGridSize(), grid.getGridSize(), grid.getGridSize());
                     graphics.setFill(Color.LAVENDER);
-                    graphics.fillRect((i * gridsize) + 1, (j * gridsize) + 1, gridsize - 2, gridsize - 2);
+                    graphics.fillRect((i * grid.getGridSize()) + 1, (j * grid.getGridSize()) + 1, grid.getGridSize() - 2, grid.getGridSize() - 2);
                 }
             }
         }
     }
 
     public void tick(GraphicsContext graphics) {
-        int[][] next = new int[100][100];
-
-        for (int i = 0; i < 100; i++) {
-            for (int j = 0; j < 100; j++) {
-                int neighbors = countAliveNeighbors(i, j);
-
-                if (neighbors == 3) {
-                    next[i][j] = 1;
-                }else if (neighbors < 2 || neighbors > 3) {
-                    next[i][j] = 0;
-                }else {
-                    next[i][j] = gridarr[i][j];
-                }
-            }
-        }
-        gridarr = next;
+        game.Step(grid);
         draw(graphics);
-    }
-
-    private int countAliveNeighbors(int i, int j) {
-        int sum = 0;
-        int iStart = i == 0 ? 0 : -1;
-        int iEndInclusive = i == gridarr.length - 1 ? 0 : 1;
-        int jStart = j == 0 ? 0 : -1;
-        int jEndInclusive = j == gridarr[0].length - 1 ? 0 : 1;
-
-        for (int k = iStart; k <= iEndInclusive; k++) {
-            for (int l = jStart; l <= jEndInclusive; l++) {
-                sum += gridarr[i + k][l + j];
-            }
-        }
-
-        sum -= gridarr[i][j];
-
-        return sum;
     }
 
     public static void main(String[] args) {

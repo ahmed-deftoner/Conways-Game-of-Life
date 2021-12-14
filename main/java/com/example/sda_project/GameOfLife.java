@@ -1,6 +1,7 @@
 package com.example.sda_project;
 
 import com.example.sda_project.BL.GameLogic;
+import com.example.sda_project.BL.GameUtils;
 import com.example.sda_project.BL.Grid;
 import com.example.sda_project.TextFile.TextFile;
 import com.example.sda_project.TextFile.TextReader;
@@ -25,9 +26,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class GameOfLife extends Application {
-    private Grid grid=new Grid();
-    private GameLogic game=new GameLogic();
-    private double speed=1;
+    private final Grid grid=new Grid();
+    private final GameLogic game=new GameLogic();
+    private final GameUtils gameUtils=new GameUtils();
     private final TextFile textReader=new TextReader();
 
     @Override
@@ -62,7 +63,7 @@ public class GameOfLife extends Application {
             @Override
             public void handle(long now) {
                 // only update once every second
-                if ((now - lastUpdate) >= TimeUnit.MILLISECONDS.toNanos((long) (500*speed))) {
+                if ((now - lastUpdate) >= TimeUnit.MILLISECONDS.toNanos((long) (500*gameUtils.getSpeed()))) {
                     tick(graphics);
                     lastUpdate = now;
                 }
@@ -96,11 +97,11 @@ public class GameOfLife extends Application {
         Label l1=new Label("Speed");
         l1.setPadding(new Insets(0,50,0,0));
         Slider speed = new Slider(0, 10, 5);
+        speed.setMajorTickUnit(1);
         speed.valueProperty().addListener(
                 (observable, oldvalue, newvalue) ->
                 {
-                    double i = newvalue.doubleValue();
-                    this.speed=i;
+                    gameUtils.setSpeed(newvalue.doubleValue());
                 });
         Label l2=new Label("Zoom");
         l2.setPadding(new Insets(0,50,0,0));
@@ -108,7 +109,7 @@ public class GameOfLife extends Application {
         zoomIn.setSkin(new MyButtonSkin(zoomIn));
         zoomIn.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
-                    grid.setGridSize(grid.getGridSize()+5);
+                    grid.setGridSize(gameUtils.ZoomIn(grid.getGridSize()));
                     draw(graphics);
                 }
         );
@@ -116,7 +117,7 @@ public class GameOfLife extends Application {
         zoomOut.setSkin(new MyButtonSkin(zoomOut));
         zoomOut.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
-                    grid.setGridSize(grid.getGridSize()-5);
+                    grid.setGridSize(gameUtils.ZoomOut(grid.getGridSize()));
                     draw(graphics);
                 }
         );

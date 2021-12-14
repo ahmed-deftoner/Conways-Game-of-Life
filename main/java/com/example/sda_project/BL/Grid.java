@@ -23,6 +23,10 @@ public class Grid {
         return gridArray[i][j];
     }
 
+    public int[][] getGridArray() {
+        return gridArray;
+    }
+
     public void setGridSize(int gridSize) {
         this.gridSize = gridSize;
     }

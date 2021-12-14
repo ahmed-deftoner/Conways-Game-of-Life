@@ -2,11 +2,11 @@ package com.example.sda_project;
 
 import com.example.sda_project.BL.GameLogic;
 import com.example.sda_project.BL.Grid;
+import com.example.sda_project.TextFile.TextFile;
+import com.example.sda_project.TextFile.TextReader;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -21,8 +21,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.*;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -30,22 +28,12 @@ public class GameOfLife extends Application {
     private Grid grid=new Grid();
     private GameLogic game=new GameLogic();
     private double speed=1;
-    private ObservableList<String> data = FXCollections.observableArrayList();
+    private final TextFile textReader=new TextReader();
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) {
 
-        Scanner scanner = null;
-        try {
-            scanner = new Scanner( new File("names.txt") );
-            while (scanner.hasNext()) {
-                String text = scanner.useDelimiter("\n").next();
-                data.add(text);
-            }
-            scanner.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        textReader.ReadNames();
 
         HBox root = new HBox(10);
         Canvas canvas=new Canvas(500,500);
@@ -144,45 +132,17 @@ public class GameOfLife extends Application {
 
                     Optional<String> result = dialog.showAndWait();
                     if (result.isPresent()) {
-                        String name=result.get();
-                        boolean found=false;
-                        for(int i=0;i<data.size();++i){
-                            if(data.get(i)==name){
-                                found=true;
-                                break;
+                        ArrayList<Integer> array=new ArrayList<>();
+                        array.add(grid.getGridSize());
+                        for(int i=0;i<100;++i){
+                            for(int j=0;j<100;++j) {
+                                 if(grid.getGridArray(i,j)==1) {
+                                     array.add(i);
+                                     array.add(j);
+                                 }
                             }
                         }
-                        if(found==false)
-                            data.add(name);
-                        FileWriter fw = null;
-                        try {
-                            fw=new FileWriter(name+".txt");
-                            List<Integer> rows = new ArrayList<>();
-                            List<Integer> column = new ArrayList<>();
-                            int counter=0;
-                            for(int i=0;i<100;++i) {
-                                for (int j = 0; j < 100; ++j) {
-                                    if(grid.getGridArray(i,j)==1) {
-                                        counter++;
-                                        rows.add(i);
-                                        column.add(j);
-                                    }
-                                }
-                            }
-                            fw.write(grid.getGridSize()+"\n");
-                            fw.write(counter+"\n");
-                            for(int i=0;i<counter;++i)
-                                fw.write(rows.get(i)+"\n");
-                            for(int i=0;i<counter;++i)
-                                fw.write(column.get(i)+"\n");
-                            fw.close();
-                            fw=new FileWriter("names.txt",true);
-                            fw.write(name+"\n");
-                            fw.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        System.out.println("Your name: " + result.get());
+                        textReader.SaveText(result.get(), array);
                     }
                 }
         );
@@ -193,28 +153,18 @@ public class GameOfLife extends Application {
                 mouseEvent -> {
                     Stage stage1=new Stage();
                     stage1.setTitle("History");
-                    ListView<String> listView = new ListView<String>(data);
+                    ListView<String> listView = new ListView<>(textReader.getData());
                     listView.setPrefSize(200, 250);
 
-                    listView.setItems(data);
+                    listView.setItems(textReader.getData());
                     listView.getSelectionModel().selectedItemProperty().addListener(
                             (ObservableValue<? extends String> ov, String old_val,
                              String new_val) -> {
-                                try {
-                                    Scanner scanner2 = new Scanner(new File(new_val+".txt"));
-                                    int [] tall = new int [100];
-                                    int i = 0;
-                                    while(scanner2.hasNextInt())
-                                    {
-                                        tall[i++] = scanner2.nextInt();
-                                    }
-                                    grid.setGridSize(tall[0]);
-                                    for(int j=2;j<=tall[1];++j){
-                                        grid.setGridArray(tall[j],tall[j+tall[1]],1);
-                                        System.out.println(tall[j]);
-                                    }
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
+                                ArrayList<Integer> array=new ArrayList<>();
+                                textReader.ReadCellInfo(new_val,array);
+                                grid.setGridSize(array.get(0));
+                                for(int i=2;i<array.get(1) + 2;++i) {
+                                    grid.setGridArray(array.get(i),array.get(i+array.get(1)),1);
                                 }
                                 draw(graphics);
                                 stage1.close();

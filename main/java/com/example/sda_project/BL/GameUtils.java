@@ -25,9 +25,5 @@ public class GameUtils {
         return speed;
     }
 
-    public int getZoom(){
-        return zoom;
-    }
-
 
 }

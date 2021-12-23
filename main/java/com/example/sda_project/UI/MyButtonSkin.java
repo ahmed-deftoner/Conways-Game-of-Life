@@ -1,4 +1,4 @@
-package com.example.sda_project;
+package com.example.sda_project.UI;
 
 import javafx.animation.FadeTransition;
 import javafx.scene.control.Button;

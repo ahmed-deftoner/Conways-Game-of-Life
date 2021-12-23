@@ -11,6 +11,7 @@ module com.example.sda_project {
     requires eu.hansolo.tilesfx;
     requires json.simple;
 
-    opens com.example.sda_project to javafx.fxml;
-    exports com.example.sda_project;
+    opens com.example.sda_project.UI to javafx.fxml;
+    exports com.example.sda_project.UI;
+
 }

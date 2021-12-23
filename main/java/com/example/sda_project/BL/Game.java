@@ -1,10 +1,10 @@
 package com.example.sda_project.BL;
 
-public class Game {
-    private Grid grid;
-    private GameLogic gameLogic;
-
-    public void Start(){
-
-    }
+public interface Game {
+    void Start();
+    void Step();
+    void Stop();
+    void Reset();
+    void Save();
+    void History();
 }

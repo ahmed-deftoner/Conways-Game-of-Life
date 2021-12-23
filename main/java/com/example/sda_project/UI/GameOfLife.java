@@ -1,10 +1,8 @@
-package com.example.sda_project;
+package com.example.sda_project.UI;
 
-import com.example.sda_project.BL.GameLogic;
-import com.example.sda_project.BL.GameUtils;
-import com.example.sda_project.BL.Grid;
-import com.example.sda_project.TextFile.TextFile;
-import com.example.sda_project.TextFile.TextReader;
+import com.example.sda_project.BL.ConwaysFeatures;
+import com.example.sda_project.BL.ConwaysGame;
+import com.example.sda_project.BL.Game;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
@@ -26,35 +24,31 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class GameOfLife extends Application {
-    private final Grid grid=new Grid();
-    private final GameLogic game=new GameLogic();
-    private final GameUtils gameUtils=new GameUtils();
-    private final TextFile textReader=new TextReader();
+    private final ConwaysGame conwaysGame=new ConwaysGame();
+    private final Game game =conwaysGame;
+    private final ConwaysFeatures feature=conwaysGame;
 
     @Override
     public void start(Stage stage) {
-
-        textReader.ReadNames();
-
         HBox root = new HBox(10);
         Canvas canvas=new Canvas(500,500);
         GraphicsContext graphics=canvas.getGraphicsContext2D();
         draw(graphics);
         canvas.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
-                      int roundx= (int) mouseEvent.getX()/grid.getGridSize();
-                      int roundy=(int) mouseEvent.getY()/ grid.getGridSize();
-                      if(grid.getGridArray(roundx,roundy)==0) {
+                      int roundx= (int) mouseEvent.getX()/feature.getGridSize();
+                      int roundy=(int) mouseEvent.getY()/ feature.getGridSize();
+                      if(feature.getGridArray(roundx,roundy)==0) {
                           graphics.setFill(Color.PURPLE);
-                          grid.setGridArray(roundx,roundy,1);
+                          feature.setGridArray(roundx,roundy,1);
                       }
                       else{
                           graphics.setFill(Color.LAVENDER);
-                          grid.setGridArray(roundx,roundy,0);
+                          feature.setGridArray(roundx,roundy,0);
                       }
-                     roundx=roundx*grid.getGridSize();
-                     roundy=roundy*grid.getGridSize();
-                     graphics.fillRect(roundx+1,roundy+1,grid.getGridSize()-2,grid.getGridSize()-2);
+                     roundx=roundx*feature.getGridSize();
+                     roundy=roundy*feature.getGridSize();
+                     graphics.fillRect(roundx+1,roundy+1,feature.getGridSize()-2,feature.getGridSize()-2);
                 }
         );
         AnimationTimer runAnimation = new AnimationTimer() {
@@ -63,8 +57,9 @@ public class GameOfLife extends Application {
             @Override
             public void handle(long now) {
                 // only update once every second
-                if ((now - lastUpdate) >= TimeUnit.MILLISECONDS.toNanos((long) (500*gameUtils.getSpeed()))) {
-                    tick(graphics);
+                if ((now - lastUpdate) >= TimeUnit.MILLISECONDS.toNanos((long) (500* feature.getSpeed()))) {
+                    game.Step();
+                    draw(graphics);
                     lastUpdate = now;
                 }
             }
@@ -89,7 +84,7 @@ public class GameOfLife extends Application {
         reset.setSkin(new MyButtonSkin(reset));
         reset.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
-                    grid.Reset();
+                    game.Reset();
                     draw(graphics);
                 }
         );
@@ -101,7 +96,7 @@ public class GameOfLife extends Application {
         speed.valueProperty().addListener(
                 (observable, oldvalue, newvalue) ->
                 {
-                    gameUtils.setSpeed(newvalue.doubleValue());
+                    feature.setSpeed(newvalue.doubleValue());
                 });
         Label l2=new Label("Zoom");
         l2.setPadding(new Insets(0,50,0,0));
@@ -109,7 +104,7 @@ public class GameOfLife extends Application {
         zoomIn.setSkin(new MyButtonSkin(zoomIn));
         zoomIn.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
-                    grid.setGridSize(gameUtils.ZoomIn(grid.getGridSize()));
+                    feature.ZoomIn();
                     draw(graphics);
                 }
         );
@@ -117,7 +112,7 @@ public class GameOfLife extends Application {
         zoomOut.setSkin(new MyButtonSkin(zoomOut));
         zoomOut.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 mouseEvent -> {
-                    grid.setGridSize(gameUtils.ZoomOut(grid.getGridSize()));
+                    feature.ZoomOut();
                     draw(graphics);
                 }
         );
@@ -133,17 +128,8 @@ public class GameOfLife extends Application {
 
                     Optional<String> result = dialog.showAndWait();
                     if (result.isPresent()) {
-                        ArrayList<Integer> array=new ArrayList<>();
-                        array.add(grid.getGridSize());
-                        for(int i=0;i<100;++i){
-                            for(int j=0;j<100;++j) {
-                                 if(grid.getGridArray(i,j)==1) {
-                                     array.add(i);
-                                     array.add(j);
-                                 }
-                            }
-                        }
-                        textReader.SaveText(result.get(), array);
+                        feature.setNameFile(result.get());
+                        game.Save();
                     }
                 }
         );
@@ -154,19 +140,15 @@ public class GameOfLife extends Application {
                 mouseEvent -> {
                     Stage stage1=new Stage();
                     stage1.setTitle("History");
-                    ListView<String> listView = new ListView<>(textReader.getData());
+                    ListView<String> listView = new ListView<>(feature.getTextData());
                     listView.setPrefSize(200, 250);
 
-                    listView.setItems(textReader.getData());
+                    listView.setItems(feature.getTextData());
                     listView.getSelectionModel().selectedItemProperty().addListener(
                             (ObservableValue<? extends String> ov, String old_val,
                              String new_val) -> {
-                                ArrayList<Integer> array=new ArrayList<>();
-                                textReader.ReadCellInfo(new_val,array);
-                                grid.setGridSize(array.get(0));
-                                for(int i=2;i<array.get(1) + 2;++i) {
-                                    grid.setGridArray(array.get(i),array.get(i+array.get(1)),1);
-                                }
+                                feature.setNameFile(new_val);
+                                game.History();
                                 draw(graphics);
                                 stage1.close();
                                 System.out.println(new_val);
@@ -197,24 +179,19 @@ public class GameOfLife extends Application {
 
         for (int i = 0; i < 100; i++) {
             for (int j = 0; j < 100; j++) {
-                if (grid.getGridArray(i,j) == 1) {
+                if (feature.getGridArray(i,j) == 1) {
                     graphics.setFill(Color.gray(0.5, 0.5));
-                    graphics.fillRect(i * grid.getGridSize(), j * grid.getGridSize(), grid.getGridSize(), grid.getGridSize());
+                    graphics.fillRect(i * feature.getGridSize(), j * feature.getGridSize(), feature.getGridSize(), feature.getGridSize());
                     graphics.setFill(Color.PURPLE);
-                    graphics.fillRect((i * grid.getGridSize()) + 1, (j * grid.getGridSize()) + 1, grid.getGridSize() - 2, grid.getGridSize() - 2);
+                    graphics.fillRect((i * feature.getGridSize()) + 1, (j * feature.getGridSize()) + 1, feature.getGridSize() - 2, feature.getGridSize() - 2);
                 }else {
                     graphics.setFill(Color.gray(0.5, 0.5));
-                    graphics.fillRect(i * grid.getGridSize(), j * grid.getGridSize(), grid.getGridSize(), grid.getGridSize());
+                    graphics.fillRect(i * feature.getGridSize(), j * feature.getGridSize(), feature.getGridSize(), feature.getGridSize());
                     graphics.setFill(Color.LAVENDER);
-                    graphics.fillRect((i * grid.getGridSize()) + 1, (j * grid.getGridSize()) + 1, grid.getGridSize() - 2, grid.getGridSize() - 2);
+                    graphics.fillRect((i * feature.getGridSize()) + 1, (j * feature.getGridSize()) + 1, feature.getGridSize() - 2, feature.getGridSize() - 2);
                 }
             }
         }
-    }
-
-    public void tick(GraphicsContext graphics) {
-        game.Step(grid);
-        draw(graphics);
     }
 
     public static void main(String[] args) {
